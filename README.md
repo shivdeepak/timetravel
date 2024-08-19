@@ -8,16 +8,16 @@ are finished, send a link to your repo to us.
 Part of what an insurance company needs to have in its backend is a 
 record system. As an insurer, we need to keep an up-to-date record of each of our policy-holder's
 data points that go into the calculation of their rate. When a policy-holder updates
-their information, I.E. they change addresses, or add/remove new employees to their team
-we will be notified and we must keep our records up to date.
+their information, i.e., they change addresses, or add/remove new employees to their team
+we will be notified, and we must keep our records up to date.
 
 The current version of the repo is an extremely simplified version of exactly that. `GET /api/v1/record/{id}`
-will retrieve a record, which is just a json mapping strings to strings. and `POST /api/v1/record/{id}`
+will retrieve a record, which is just a JSON mapping strings to strings. and `POST /api/v1/record/{id}`
 will either create a new record or modify an existing record. However, it isn't enough to
 just keep a record of the current record state but we must maintain a reference to how the state
 has changed to be in full compliance.
 
-Say that the policy-holder buys their insurance on the start of the year, and then two months later
+Say that the policy-holder buys their insurance at the start of the year, and then two months later
 changes the address of their business but doesn't tell us about this change until 4 months after that.
 Since we were technically held liable if there was a claim event, we need to charge the customer the
 difference for the 4 months since they changed addresses. To do so accurately, we need to know the
@@ -28,7 +28,7 @@ In this project, you'll make a simplified version of this system. We've implemen
 At a high-level your goal is to do two things to this existing codebase:
 
 1. Change the storage backend to sqlite, and persist the data across turning off and on the server.
-2. Add the time travel component so we can easily look up the state of each records at different timesteps.
+2. Add the time travel component so we can easily look up the state of each record at different timesteps.
 
 The sections below outline these two objectives in more detail. You may use whatever libraries and tools
 you like to achieve this even as far as building this in an entirely different language.
@@ -44,7 +44,7 @@ is running. The server should tolerate restarting the process without data loss.
 
 ## Objective: Add Time Travel
 This part is far more open-ended. You might need to make major changes across nearly
-all files of the codebase. You'll be adding persistentence to the records. 
+all files of the codebase. You'll be adding persistence to the records. 
 
 You should create a set of `/api/v2` endpoints that enable you to do run gets, creates, and updates. 
 Unlike in v1, records are now versioned. Full requirements: 
@@ -55,17 +55,17 @@ the latest version).
 - There should be a way to get a list of the different versions too.
 - `/api/v1` should still work after these changes with identical behavior as before.
 
-# Reccommendations
+# Recommendations
 
 We expect you to work as if this task was a normal project at work. So please write
 your code in a way that fits your intuitive notion of operating within best practices.
-Additionally, you should at the very least have a different commmit for each individual objective, 
+Additionally, you should at the very least have a different commit for each individual objective, 
 ideally more as you go through process of completing the take-home. Also we like
 to see your thought process and fixes as you make changes. So don't be afraid of
 committing code that you later edit. No need to squash those commits.
 
-Many parts of the assignment is intentionally ambiguious. If you have a question, definitely
-reach out. But for many of these ambiguiuties, we want to see how you independently make
+Many parts of the assignment are intentionally ambiguous. If you have a question, definitely
+reach out. But for many of these ambiguities, we want to see how you independently make
 software design decisions.
 
 # FAQ
@@ -105,10 +105,10 @@ This endpoint will return the record if it exists.
 
 ### `POST /api/v1/records/{id}`
 
-This endpoint will create a record if a does not exists.
+This endpoint will create a record if it does not exist.
 Otherwise it will update the record.
 
-The payload is a json object mapping strings to strings
+The payload is a JSON object mapping strings to strings
 and nulls. Values that are null indicate that the
 backend must delete that key of the record.
 
