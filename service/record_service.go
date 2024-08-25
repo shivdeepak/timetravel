@@ -105,7 +105,8 @@ func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeD
 func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, prevRecord model.Record, unsafeData map[string]interface{}) (model.Record, error) {
 	log.Debug().Msg("UpdateRecord")
 
-	safeData := model.Record{}.SanitizePayload(unsafeData, false)
+	safeData := model.Record{}.SanitizePayload(unsafeData, true)
+	log.Debug().Msgf("Num Safe Fields: %d", len(safeData))
 	changedData := prevRecord.ExtractChangedData(safeData)
 
 	numChangedFields := len(changedData)
