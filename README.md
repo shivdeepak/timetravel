@@ -139,3 +139,107 @@ backend must delete that key of the record.
 < Content-Type: application/json; charset=utf-8
 {"id":1,"data":{"status":"ok"}}
 ```
+
+# API V2 - Reference
+
+There are only three API endpoints:
+
+1. `GET /api/v2/records/{id}`
+2. `POST /api/v2/records/{id}`
+2. `GET /api/v2/records/{id}/versions`
+
+all ids must be positive integers.
+
+### `GET /api/v2/records/{id}`
+
+This endpoint will return the record if it exists.
+
+```bash
+> GET /api/v2/records/2323 HTTP/1.1
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+{"id":2323,"data":{"david":"hey","davidx":"hey"}}
+```
+
+```bash
+> GET /api/v2/records/32 HTTP/1.1
+
+< HTTP/1.1 400 Bad Request
+< Content-Type: application/json; charset=utf-8
+{"error":"record of id 32 does not exist"}
+```
+
+This endpoint also has supports time travel, meaning you can lookup
+a previous version of the record at a given point in time, if it exists.
+
+```bash
+> GET /api/v2/records/30?at=2024-08-25T16:25:00-07:00 HTTP/1.1
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+{"id":30,"data":{"created_at":"2024-08-25T16:13:02-07:00","dob":"1955-02-24T00:00:00-07:00","first_name":"Steven","last_name":"Jobs","middle_name":"","updated_at":"2024-08-25T16:19:18-07:00"}}
+```
+
+### `POST /api/v2/records/{id}`
+
+This endpoint will create a record if a does not exists.
+Otherwise it will update the record.
+
+The payload is a json object mapping strings to strings
+and nulls. Values that are null indicate that the
+backend must delete that key of the record.
+
+Note that it will only update the record if there are changes.
+Otherwise it will just return a status code 200 without any
+changes, i.e. it will not create a new version.
+
+```bash
+# Creating a record
+> POST /api/v2/records/1 HTTP/1.1
+{"hello":"world"}
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+{"id":1,"data":{"hello":"world"}}
+
+
+# Updating that record
+> POST /api/v2/records/1 HTTP/1.1
+{"hello":"world 2","status":"ok"}
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+{"id":1,"data":{"hello":"world 2","status":"ok"}}
+
+
+# Deleting a field
+> POST /api/v2/records/1 HTTP/1.1
+{"hello":null}
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+{"id":1,"data":{"status":"ok"}}
+```
+
+### `GET /api/v2/records/{id}/versions`
+
+This endpoint provides ability to lookup all versions of a
+records if it exists in the database.
+
+
+```bash
+> GET /api/v2/records/30/versions HTTP/1.1
+
+< HTTP/1.1 200 OK
+< Content-Type: application/json; charset=utf-8
+[{"id":30,"data":{"created_at":"2024-08-25T16:13:02-07:00","dob":"1955-02-24T00:00:00-07:00","first_name":"Steven","last_name":"Jobs","middle_name":"","updated_at":"2024-08-25T16:19:18-07:00"}},{"id":30,"data":{"created_at":"2024-08-25T16:13:02-07:00","dob":"1955-02-24T00:00:00-07:00","first_name":"Steven","last_name":"Jobs","middle_name":"Paul","updated_at":"2024-08-25T16:14:01-07:00"}},{"id":30,"data":{"created_at":"2024-08-25T16:13:02-07:00","dob":"0001-01-01T00:00:00Z","first_name":"Steven","last_name":"Jobs","middle_name":"Paul","updated_at":"2024-08-25T16:13:21-07:00"}},{"id":30,"data":{"created_at":"2024-08-25T16:13:02-07:00","dob":"0001-01-01T00:00:00Z","first_name":"Steve","last_name":"Jobs","middle_name":"","updated_at":"2024-08-25T16:13:02-07:00"}}]
+```
+
+```bash
+> GET /api/v2/records/32/versions HTTP/1.1
+
+< HTTP/1.1 400 Bad Request
+< Content-Type: application/json; charset=utf-8
+{"error":"record of id 32 does not exist"}
+```
