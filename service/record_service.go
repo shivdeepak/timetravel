@@ -20,6 +20,9 @@ type RecordService interface {
 	// GetRecord will retrieve an record.
 	GetRecord(ctx context.Context, id uint) (model.Record, error)
 
+	// GetRecordAt will retrieve a record's version at a given timestamp
+	GetRecordAt(ctx context.Context, id uint, at time.Time) (model.Record, error)
+
 	// GetVersions will retrieve all versions of record.
 	GetVersions(ctx context.Context, id uint) ([]model.Record, error)
 
@@ -43,10 +46,16 @@ func NewSQLiteRecordService() SQLiteRecordService {
 }
 
 func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Record, error) {
+	return s.GetRecordAt(ctx, id, time.Now())
+}
+
+func (s *SQLiteRecordService) GetRecordAt(ctx context.Context, id uint, at time.Time) (model.Record, error) {
 	db := model.GetDb()
 
 	var record model.Record
-	result := db.Order("updated_at desc").First(&record, id)
+	result := db.Order("updated_at desc").
+		Where("updated_at < ?", at.Format(time.RFC3339)).
+		First(&record, id)
 	if result.Error != nil {
 		return model.Record{}, result.Error
 	}
