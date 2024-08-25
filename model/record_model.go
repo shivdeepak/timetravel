@@ -18,7 +18,7 @@ type Record struct {
 	MiddleName string    `json:"middle_name"`
 	LastName   string    `json:"last_name"`
 	Email      string    `json:"email"`
-	DOB        time.Time `json:"dob"`
+	Dob        time.Time `json:"dob"`
 	Phone      string    `json:"phone"`
 	Street     string    `json:"street"`
 	City       string    `json:"city"`
