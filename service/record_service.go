@@ -29,7 +29,7 @@ type RecordService interface {
 	// if the update[key] is null it will delete that key from the record's Map.
 	//
 	// UpdateRecord will error if id <= 0 or the record does not exist with that id.
-	UpdateRecord(ctx context.Context, record model.Record, unsafeData map[string]interface{}) (model.Record, error)
+	UpdateRecord(ctx context.Context, prevRecord model.Record, unsafeData map[string]interface{}) (model.Record, error)
 }
 
 // SQLiteRecordService is a SQLite implementation of RecordService.
@@ -43,7 +43,7 @@ func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Rec
 	db := model.GetDb()
 
 	var record model.Record
-	result := db.First(&record, id)
+	result := db.Order("updated_at desc").First(&record, id)
 	if result.Error != nil {
 		return model.Record{}, result.Error
 	}
@@ -54,18 +54,17 @@ func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Rec
 func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeData map[string]interface{}) (model.Record, error) {
 	log.Debug().Msg("CreateRecord")
 
-	var newRecord model.Record
-	newRecord.ID = id
-	safeData := newRecord.SanitizePayload(unsafeData, false)
+	safeData := model.Record{}.SanitizePayload(unsafeData, false)
 
 	numSafeFields := len(safeData)
 
 	db := model.GetDb()
 	if numSafeFields > 0 {
 		log.Debug().Msg("Running Create")
+		safeData["id"] = id
 		safeData["created_at"] = time.Now().Format(time.RFC3339)
 		safeData["updated_at"] = time.Now().Format(time.RFC3339)
-		result := db.Model(&newRecord).Create(safeData)
+		result := db.Model(&model.Record{}).Create(safeData)
 		if result.Error != nil {
 			logging.LogError(result.Error)
 			return model.Record{}, result.Error
@@ -78,24 +77,26 @@ func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeD
 	}
 }
 
-func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, record model.Record, unsafeData map[string]interface{}) (model.Record, error) {
+func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, prevRecord model.Record, unsafeData map[string]interface{}) (model.Record, error) {
 	log.Debug().Msg("UpdateRecord")
 
-	safeData := record.SanitizePayload(unsafeData, true)
+	safeData := model.Record{}.SanitizePayload(unsafeData, false)
 
 	numSafeFields := len(safeData)
 
 	db := model.GetDb()
 	if numSafeFields > 0 {
 		log.Debug().Msg("Running Updated")
+		safeData["id"] = prevRecord.ID
+		safeData["created_at"] = prevRecord.CreatedAt.Format(time.RFC3339)
 		safeData["updated_at"] = time.Now().Format(time.RFC3339)
-		result := db.Model(&record).Updates(safeData)
+		result := db.Model(&model.Record{}).Create(safeData)
 		if result.Error != nil {
 			logging.LogError(result.Error)
 			return model.Record{}, result.Error
 		} else {
 			log.Debug().Msg("Record Updated")
-			return s.GetRecord(ctx, record.ID)
+			return s.GetRecord(ctx, prevRecord.ID)
 		}
 	} else {
 		return model.Record{}, errors.New("No Fields to Update")

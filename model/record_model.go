@@ -9,9 +9,9 @@ import (
 )
 
 type Record struct {
-	ID        uint           `gorm:"primaryKey" json:"-"`
+	ID        uint           `gorm:"primaryKey;autoIncrement:false" json:"-"`
 	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
+	UpdatedAt time.Time      `gorm:"primaryKey" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 
 	FirstName  string    `json:"first_name"`
