@@ -72,6 +72,10 @@ func (s *SQLiteRecordService) GetVersions(ctx context.Context, id uint) ([]model
 		return []model.Record{}, result.Error
 	}
 
+	if len(records) == 0 {
+		return []model.Record{}, errors.New("Record doesn't exist!")
+	}
+
 	return records, nil
 }
 

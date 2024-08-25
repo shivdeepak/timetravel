@@ -28,7 +28,7 @@ func (a *API_V2) GetVersions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record, err := a.records.GetVersions(
+	records, err := a.records.GetVersions(
 		ctx,
 		uint(idNumber),
 	)
@@ -43,6 +43,6 @@ func (a *API_V2) GetVersions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteRecords(w, record)
+	response.WriteRecords(w, records)
 
 }
