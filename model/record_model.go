@@ -71,15 +71,6 @@ func (r Record) MutableFields() []string {
 	}
 }
 
-func (r Record) IsMutableField(key string) bool {
-	for _, field := range r.MutableFields() {
-		if field == key {
-			return true
-		}
-	}
-	return false
-}
-
 func (r Record) SanitizePayload(unsafeData map[string]interface{}, preserveNil bool) map[string]interface{} {
 	safeData := make(map[string]interface{})
 
