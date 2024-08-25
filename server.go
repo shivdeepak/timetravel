@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/api"
+	"github.com/rainbowmga/timetravel/model"
 	"github.com/rainbowmga/timetravel/service"
 )
 
@@ -19,6 +20,8 @@ func logError(err error) {
 }
 
 func main() {
+	model.InitDb()
+
 	router := mux.NewRouter()
 
 	service := service.NewInMemoryRecordService()

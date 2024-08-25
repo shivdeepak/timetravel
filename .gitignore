@@ -1,3 +1,4 @@
+*.db
 bin
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,emacs,go
