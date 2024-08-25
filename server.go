@@ -13,14 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// logError logs all non-nil errors
-func logError(err error) {
-	if err != nil {
-		log.Debug().Msg("Here")
-		log.Error().Err(err).Msg("")
-	}
-}
-
 func main() {
 	logging.InitLogging()
 	model.InitDb()
