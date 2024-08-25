@@ -3,20 +3,15 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
+
+	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rs/zerolog/log"
 )
 
 var (
 	ErrInternal = errors.New("internal error")
 )
-
-// logs an error if it's not nil
-func logError(err error) {
-	if err != nil {
-		log.Printf("error: %v", err)
-	}
-}
 
 // writeJSON writes the data as json.
 func writeJSON(w http.ResponseWriter, data interface{}, statusCode int) error {

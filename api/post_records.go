@@ -7,8 +7,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/rainbowmga/timetravel/entity"
-	"github.com/rainbowmga/timetravel/service"
+	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rs/zerolog/log"
 )
 
 // POST /records/{id}
@@ -21,7 +21,7 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || idNumber <= 0 {
 		err := writeError(w, "invalid id; id must be a positive number", http.StatusBadRequest)
-		logError(err)
+		logging.LogError(err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		err := writeError(w, "invalid input; could not parse json", http.StatusBadRequest)
-		logError(err)
+		logging.LogError(err)
 		return
 	}
 
