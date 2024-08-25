@@ -54,7 +54,7 @@ func (s *SQLiteRecordService) GetRecordAt(ctx context.Context, id uint, at time.
 
 	var record model.Record
 	result := db.Order("updated_at desc").
-		Where("updated_at < ?", at.Format(time.RFC3339)).
+		Where("updated_at <= ?", at.Format(time.RFC3339)).
 		First(&record, id)
 	if result.Error != nil {
 		return model.Record{}, result.Error
