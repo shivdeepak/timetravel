@@ -20,7 +20,10 @@ func NewAPI(records service.RecordService) *API {
 
 // generates all api routes
 func (a *API) CreateRoutes(routes *mux.Router) {
-	routes.Path("/health").HandlerFunc(
+	apiV1 := v1.NewV1API(a.records)
+	routerV1 := routes.PathPrefix("/v1").Subrouter()
+
+	routerV1.Path("/health").HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			err := json.NewEncoder(w).Encode(
 				map[string]bool{"ok": true},
@@ -29,7 +32,5 @@ func (a *API) CreateRoutes(routes *mux.Router) {
 		},
 	)
 
-	apiV1 := v1.NewV1API(a.records)
-	routerV1 := routes.PathPrefix("/v1").Subrouter()
 	apiV1.CreateRoutes(routerV1)
 }
