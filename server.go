@@ -2,24 +2,27 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/api"
+	"github.com/rainbowmga/timetravel/logging"
 	"github.com/rainbowmga/timetravel/model"
 	"github.com/rainbowmga/timetravel/service"
+	"github.com/rs/zerolog/log"
 )
 
 // logError logs all non-nil errors
 func logError(err error) {
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Debug().Msg("Here")
+		log.Error().Err(err).Msg("")
 	}
 }
 
 func main() {
+	logging.InitLogging()
 	model.InitDb()
 
 	router := mux.NewRouter()
@@ -42,6 +45,7 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Printf("listening on http://%s", address)
-	log.Fatal(srv.ListenAndServe())
+	log.Info().Msgf("listening on http://%s", address)
+	err := srv.ListenAndServe()
+	log.Fatal().Err(err).Msg("")
 }
