@@ -54,9 +54,9 @@ func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Rec
 func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeData map[string]interface{}) (model.Record, error) {
 	log.Debug().Msg("CreateRecord")
 
-	var _record model.Record
-	_record.ID = id
-	safeData := _record.SanitizePayload(unsafeData, false)
+	var newRecord model.Record
+	newRecord.ID = id
+	safeData := newRecord.SanitizePayload(unsafeData, false)
 
 	numSafeFields := len(safeData)
 
@@ -65,7 +65,7 @@ func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeD
 		log.Debug().Msg("Running Create")
 		safeData["created_at"] = time.Now().Format(time.RFC3339)
 		safeData["updated_at"] = time.Now().Format(time.RFC3339)
-		result := db.Model(&_record).Create(safeData)
+		result := db.Model(&newRecord).Create(safeData)
 		if result.Error != nil {
 			logging.LogError(result.Error)
 			return model.Record{}, result.Error
