@@ -97,7 +97,8 @@ func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeD
 			return s.GetRecord(ctx, id)
 		}
 	} else {
-		return model.Record{}, errors.New("No Fields to Update")
+		log.Debug().Msg("Skipped Create, Nothing to Create!")
+		return model.Record{}, errors.New("No Fields to Create Record!")
 	}
 }
 
@@ -123,6 +124,7 @@ func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, prevRecord model
 			return s.GetRecord(ctx, prevRecord.ID)
 		}
 	} else {
-		return model.Record{}, errors.New("No Fields to Update")
+		log.Debug().Msg("Skipped Update, Nothing to Update!")
+		return prevRecord, nil
 	}
 }
