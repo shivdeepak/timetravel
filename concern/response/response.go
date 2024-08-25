@@ -48,3 +48,24 @@ func WriteRecord(w http.ResponseWriter, record model.Record) {
 	}
 	logging.LogError(err)
 }
+
+func WriteRecords(w http.ResponseWriter, records []model.Record) {
+	recordsJson := make([]interface{}, len(records))
+	for i, record := range records {
+		recordJson, err := record.ToJSON()
+		if err != nil {
+			err := WriteError(w, "internal error", http.StatusInternalServerError)
+			logging.LogError(err)
+			return
+		}
+		recordsJson[i] = recordJson
+	}
+
+	err := WriteJSON(w, recordsJson, http.StatusOK)
+	if err != nil {
+		err := WriteError(w, "internal error", http.StatusInternalServerError)
+		logging.LogError(err)
+		return
+	}
+	logging.LogError(err)
+}

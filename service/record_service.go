@@ -20,6 +20,9 @@ type RecordService interface {
 	// GetRecord will retrieve an record.
 	GetRecord(ctx context.Context, id uint) (model.Record, error)
 
+	// GetVersions will retrieve all versions of record.
+	GetVersions(ctx context.Context, id uint) ([]model.Record, error)
+
 	// CreateRecord will insert a new record.
 	//
 	// If it a record with that id already exists it will fail.
@@ -49,6 +52,18 @@ func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Rec
 	}
 
 	return record, nil
+}
+
+func (s *SQLiteRecordService) GetVersions(ctx context.Context, id uint) ([]model.Record, error) {
+	db := model.GetDb()
+
+	var records []model.Record
+	result := db.Order("updated_at desc").Find(&records, id)
+	if result.Error != nil {
+		return []model.Record{}, result.Error
+	}
+
+	return records, nil
 }
 
 func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeData map[string]interface{}) (model.Record, error) {
