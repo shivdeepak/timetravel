@@ -95,7 +95,7 @@ func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, record model.Rec
 			return model.Record{}, result.Error
 		} else {
 			log.Debug().Msg("Record Updated")
-			return record, nil
+			return s.GetRecord(ctx, record.ID)
 		}
 	} else {
 		return model.Record{}, errors.New("No Fields to Update")
