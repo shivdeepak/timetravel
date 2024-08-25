@@ -1,13 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/api"
-	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/concern/logging"
 	"github.com/rainbowmga/timetravel/middleware"
 	"github.com/rainbowmga/timetravel/model"
 	"github.com/rainbowmga/timetravel/service"
@@ -31,11 +30,7 @@ func main() {
 	service := service.NewSQLiteRecordService()
 	api := api.NewAPI(&service)
 
-	apiRoute := router.PathPrefix("/api/v1").Subrouter()
-	apiRoute.Path("/health").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := json.NewEncoder(w).Encode(map[string]bool{"ok": true})
-		logError(err)
-	})
+	apiRoute := router.PathPrefix("/api").Subrouter()
 	api.CreateRoutes(apiRoute)
 
 	loggedRouter := middleware.AccessLogMiddleware(router)

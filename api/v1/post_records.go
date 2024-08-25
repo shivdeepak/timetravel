@@ -1,4 +1,4 @@
-package api
+package v1
 
 import (
 	"encoding/json"
@@ -6,7 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/concern/logging"
+	"github.com/rainbowmga/timetravel/concern/response"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -14,13 +15,17 @@ import (
 // POST /records/{id}
 // if the record exists, the record is updated.
 // if the record doesn't exist, the record is created.
-func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
+func (a *API_V1) PostRecords(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := mux.Vars(r)["id"]
 	idNumber, err := strconv.ParseInt(id, 10, 32)
 
 	if err != nil || idNumber <= 0 {
-		err := writeError(w, "invalid id; id must be a positive number", http.StatusBadRequest)
+		err := response.WriteError(
+			w,
+			"invalid id; id must be a positive number",
+			http.StatusBadRequest,
+		)
 		logging.LogError(err)
 		return
 	}
@@ -29,7 +34,11 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
-		err := writeError(w, "invalid input; could not parse json", http.StatusBadRequest)
+		err := response.WriteError(
+			w,
+			"invalid input; could not parse json",
+			http.StatusBadRequest,
+		)
 		logging.LogError(err)
 		return
 	}
@@ -44,22 +53,34 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 		log.Info().Msg("Update Existing Record")
 		record, err = a.records.UpdateRecord(ctx, record, body)
 		if err == nil {
-			writeRecord(w, record)
+			response.WriteRecord(w, record)
 		} else {
-			err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+			err := response.WriteError(
+				w,
+				response.ErrInternal.Error(),
+				http.StatusInternalServerError,
+			)
 			logging.LogError(err)
 		}
 	} else if err == gorm.ErrRecordNotFound {
 		log.Info().Msg("Create New Record")
 		record, err = a.records.CreateRecord(ctx, uint(idNumber), body)
 		if err == nil {
-			writeRecord(w, record)
+			response.WriteRecord(w, record)
 		} else {
-			err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+			err := response.WriteError(
+				w,
+				response.ErrInternal.Error(),
+				http.StatusInternalServerError,
+			)
 			logging.LogError(err)
 		}
 	} else {
-		err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+		err := response.WriteError(
+			w,
+			response.ErrInternal.Error(),
+			http.StatusInternalServerError,
+		)
 		logging.LogError(err)
 	}
 }

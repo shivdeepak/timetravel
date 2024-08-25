@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/concern/logging"
 	"github.com/rainbowmga/timetravel/model"
 	"github.com/rs/zerolog/log"
 )
