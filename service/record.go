@@ -3,8 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
-	"github.com/rainbowmga/timetravel/entity"
+	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/model"
+	"github.com/rs/zerolog/log"
 )
 
 var ErrRecordDoesNotExist = errors.New("record with that id does not exist")
@@ -15,69 +18,86 @@ var ErrRecordAlreadyExists = errors.New("record already exists")
 type RecordService interface {
 
 	// GetRecord will retrieve an record.
-	GetRecord(ctx context.Context, id int) (entity.Record, error)
+	GetRecord(ctx context.Context, id uint) (model.Record, error)
 
 	// CreateRecord will insert a new record.
 	//
 	// If it a record with that id already exists it will fail.
-	CreateRecord(ctx context.Context, record entity.Record) error
+	CreateRecord(ctx context.Context, id uint, unsafeData map[string]interface{}) (model.Record, error)
 
 	// UpdateRecord will change the internal `Map` values of the record if they exist.
 	// if the update[key] is null it will delete that key from the record's Map.
 	//
 	// UpdateRecord will error if id <= 0 or the record does not exist with that id.
-	UpdateRecord(ctx context.Context, id int, updates map[string]*string) (entity.Record, error)
+	UpdateRecord(ctx context.Context, record model.Record, unsafeData map[string]interface{}) (model.Record, error)
 }
 
-// InMemoryRecordService is an in-memory implementation of RecordService.
-type InMemoryRecordService struct {
-	data map[int]entity.Record
+// SQLiteRecordService is a SQLite implementation of RecordService.
+type SQLiteRecordService struct{}
+
+func NewSQLiteRecordService() SQLiteRecordService {
+	return SQLiteRecordService{}
 }
 
-func NewInMemoryRecordService() InMemoryRecordService {
-	return InMemoryRecordService{
-		data: map[int]entity.Record{},
+func (s *SQLiteRecordService) GetRecord(ctx context.Context, id uint) (model.Record, error) {
+	db := model.GetDb()
+
+	var record model.Record
+	result := db.First(&record, id)
+	if result.Error != nil {
+		return model.Record{}, result.Error
 	}
-}
 
-func (s *InMemoryRecordService) GetRecord(ctx context.Context, id int) (entity.Record, error) {
-	record := s.data[id]
-	if record.ID == 0 {
-		return entity.Record{}, ErrRecordDoesNotExist
-	}
-
-	record = record.Copy() // copy is necessary so modifations to the record don't change the stored record
 	return record, nil
 }
 
-func (s *InMemoryRecordService) CreateRecord(ctx context.Context, record entity.Record) error {
-	id := record.ID
-	if id <= 0 {
-		return ErrRecordIDInvalid
-	}
+func (s *SQLiteRecordService) CreateRecord(ctx context.Context, id uint, unsafeData map[string]interface{}) (model.Record, error) {
+	log.Debug().Msg("CreateRecord")
 
-	existingRecord := s.data[id]
-	if existingRecord.ID != 0 {
-		return ErrRecordAlreadyExists
-	}
+	var _record model.Record
+	_record.ID = id
+	safeData := _record.SanitizePayload(unsafeData, false)
 
-	s.data[id] = record
-	return nil
+	numSafeFields := len(safeData)
+
+	db := model.GetDb()
+	if numSafeFields > 0 {
+		log.Debug().Msg("Running Create")
+		safeData["created_at"] = time.Now().Format(time.RFC3339)
+		safeData["updated_at"] = time.Now().Format(time.RFC3339)
+		result := db.Model(&_record).Create(safeData)
+		if result.Error != nil {
+			logging.LogError(result.Error)
+			return model.Record{}, result.Error
+		} else {
+			log.Debug().Msg("Record Created")
+			return s.GetRecord(ctx, id)
+		}
+	} else {
+		return model.Record{}, errors.New("No Fields to Update")
+	}
 }
 
-func (s *InMemoryRecordService) UpdateRecord(ctx context.Context, id int, updates map[string]*string) (entity.Record, error) {
-	entry := s.data[id]
-	if entry.ID == 0 {
-		return entity.Record{}, ErrRecordDoesNotExist
-	}
+func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, record model.Record, unsafeData map[string]interface{}) (model.Record, error) {
+	log.Debug().Msg("UpdateRecord")
 
-	for key, value := range updates {
-		if value == nil { // deletion update
-			delete(entry.Data, key)
+	safeData := record.SanitizePayload(unsafeData, true)
+
+	numSafeFields := len(safeData)
+
+	db := model.GetDb()
+	if numSafeFields > 0 {
+		log.Debug().Msg("Running Updated")
+		safeData["updated_at"] = time.Now().Format(time.RFC3339)
+		result := db.Model(&record).Updates(safeData)
+		if result.Error != nil {
+			logging.LogError(result.Error)
+			return model.Record{}, result.Error
 		} else {
-			entry.Data[key] = *value
+			log.Debug().Msg("Record Updated")
+			return record, nil
 		}
+	} else {
+		return model.Record{}, errors.New("No Fields to Update")
 	}
-
-	return entry.Copy(), nil
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/model"
 	"github.com/rs/zerolog/log"
 )
 
@@ -29,4 +30,21 @@ func writeError(w http.ResponseWriter, message string, statusCode int) error {
 		map[string]string{"error": message},
 		statusCode,
 	)
+}
+
+func writeRecord(w http.ResponseWriter, record model.Record) {
+	recordJson, err := record.ToJSON()
+	if err != nil {
+		err := writeError(w, "internal error", http.StatusInternalServerError)
+		logging.LogError(err)
+		return
+
+	}
+	err = writeJSON(w, recordJson, http.StatusOK)
+	if err != nil {
+		err := writeError(w, "internal error", http.StatusInternalServerError)
+		logging.LogError(err)
+		return
+	}
+	logging.LogError(err)
 }

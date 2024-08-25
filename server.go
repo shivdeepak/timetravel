@@ -27,7 +27,7 @@ func main() {
 
 	router := mux.NewRouter()
 
-	service := service.NewInMemoryRecordService()
+	service := service.NewSQLiteRecordService()
 	api := api.NewAPI(&service)
 
 	apiRoute := router.PathPrefix("/api/v1").Subrouter()

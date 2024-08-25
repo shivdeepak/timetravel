@@ -2,13 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/logging"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 // POST /records/{id}
@@ -25,7 +25,7 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body map[string]*string
+	var body map[string]interface{}
 	err = json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
@@ -37,35 +37,29 @@ func (a *API) PostRecords(w http.ResponseWriter, r *http.Request) {
 	// first retrieve the record
 	record, err := a.records.GetRecord(
 		ctx,
-		int(idNumber),
+		uint(idNumber),
 	)
 
-	if !errors.Is(err, service.ErrRecordDoesNotExist) { // record exists
-		record, err = a.records.UpdateRecord(ctx, int(idNumber), body)
-	} else { // record does not exist
-
-		// exclude the delete updates
-		recordMap := map[string]string{}
-		for key, value := range body {
-			if value != nil {
-				recordMap[key] = *value
-			}
+	if err == nil {
+		log.Info().Msg("Update Existing Record")
+		record, err = a.records.UpdateRecord(ctx, record, body)
+		if err == nil {
+			writeRecord(w, record)
+		} else {
+			err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+			logging.LogError(err)
 		}
-
-		record = entity.Record{
-			ID:   int(idNumber),
-			Data: recordMap,
+	} else if err == gorm.ErrRecordNotFound {
+		log.Info().Msg("Create New Record")
+		record, err = a.records.CreateRecord(ctx, uint(idNumber), body)
+		if err == nil {
+			writeRecord(w, record)
+		} else {
+			err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+			logging.LogError(err)
 		}
-		err = a.records.CreateRecord(ctx, record)
+	} else {
+		err := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
+		logging.LogError(err)
 	}
-
-	if err != nil {
-		errInWriting := writeError(w, ErrInternal.Error(), http.StatusInternalServerError)
-		logError(err)
-		logError(errInWriting)
-		return
-	}
-
-	err = writeJSON(w, record, http.StatusOK)
-	logError(err)
 }

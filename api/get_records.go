@@ -25,7 +25,7 @@ func (a *API) GetRecords(w http.ResponseWriter, r *http.Request) {
 
 	record, err := a.records.GetRecord(
 		ctx,
-		int(idNumber),
+		uint(idNumber),
 	)
 
 	if err != nil {
@@ -34,6 +34,5 @@ func (a *API) GetRecords(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = writeJSON(w, record, http.StatusOK)
-	logError(err)
+	writeRecord(w, record)
 }
