@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gobeam/stringy"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -88,4 +89,68 @@ func (r Record) SanitizePayload(unsafeData map[string]interface{}, preserveNil b
 	}
 
 	return safeData
+}
+
+func (r Record) ExtractChangedData(safeData map[string]interface{}) map[string]interface{} {
+	changedData := make(map[string]interface{})
+
+	reflectRecord := reflect.ValueOf(r)
+	for field, newValue := range safeData {
+		fieldKey := stringy.New(field).CamelCase("?", "").UcFirst()
+		rField := reflectRecord.FieldByName(fieldKey)
+		if rField.IsValid() {
+			currentValue := rField.Interface().(interface{})
+
+			if !areEqual(newValue, currentValue) {
+				log.Debug().Msgf("Field: %s", fieldKey)
+				log.Debug().Msgf("Changed")
+				changedData[field] = newValue
+			}
+		}
+	}
+
+	return changedData
+}
+
+func areEqual(newValue interface{}, currentValue interface{}) bool {
+	if reflect.TypeOf(newValue) == reflect.TypeOf(currentValue) {
+		return reflect.DeepEqual(newValue, currentValue)
+	}
+
+	if reflect.TypeOf(currentValue) == reflect.TypeOf(time.Time{}) {
+		parsedTime, err := time.Parse(time.RFC3339, newValue.(string))
+		if err != nil {
+			log.Error().Err(err).Msg("Couldn't Convert to Time")
+			return false
+		}
+		return reflect.DeepEqual(parsedTime, currentValue)
+	}
+
+	return false
+}
+
+func (r Record) GetData() map[string]interface{} {
+	data := make(map[string]interface{})
+
+	reflectRecord := reflect.ValueOf(r)
+	for _, field := range r.MutableFields() {
+		fieldKey := stringy.New(field).CamelCase("?", "").UcFirst()
+		rField := reflectRecord.FieldByName(fieldKey)
+		if rField.IsValid() {
+			data[field] = reflectRecord.FieldByName(fieldKey).
+				Interface().(interface{})
+		}
+	}
+
+	return data
+}
+
+func (r Record) MergeData(changedData map[string]interface{}) map[string]interface{} {
+	mergedData := r.GetData()
+
+	for field, newValue := range changedData {
+		mergedData[field] = newValue
+	}
+
+	return mergedData
 }

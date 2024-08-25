@@ -106,16 +106,19 @@ func (s *SQLiteRecordService) UpdateRecord(ctx context.Context, prevRecord model
 	log.Debug().Msg("UpdateRecord")
 
 	safeData := model.Record{}.SanitizePayload(unsafeData, false)
+	changedData := prevRecord.ExtractChangedData(safeData)
 
-	numSafeFields := len(safeData)
+	numChangedFields := len(changedData)
+	log.Debug().Msgf("Num Changed Fields: %d", numChangedFields)
 
 	db := model.GetDb()
-	if numSafeFields > 0 {
+	if numChangedFields > 0 {
 		log.Debug().Msg("Running Updated")
-		safeData["id"] = prevRecord.ID
-		safeData["created_at"] = prevRecord.CreatedAt.Format(time.RFC3339)
-		safeData["updated_at"] = time.Now().Format(time.RFC3339)
-		result := db.Model(&model.Record{}).Create(safeData)
+		newRecordData := prevRecord.MergeData(changedData)
+		newRecordData["id"] = prevRecord.ID
+		newRecordData["created_at"] = prevRecord.CreatedAt.Format(time.RFC3339)
+		newRecordData["updated_at"] = time.Now().Format(time.RFC3339)
+		result := db.Model(&model.Record{}).Create(newRecordData)
 		if result.Error != nil {
 			logging.LogError(result.Error)
 			return model.Record{}, result.Error
