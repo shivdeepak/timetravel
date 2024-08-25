@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/api/v1"
+	"github.com/rainbowmga/timetravel/api/v2"
 	"github.com/rainbowmga/timetravel/concern/logging"
 	"github.com/rainbowmga/timetravel/service"
 )
@@ -33,4 +34,8 @@ func (a *API) CreateRoutes(routes *mux.Router) {
 	)
 
 	apiV1.CreateRoutes(routerV1)
+
+	apiV2 := v2.NewV2API(a.records)
+	routerV2 := routes.PathPrefix("/v2").Subrouter()
+	apiV2.CreateRoutes(routerV2)
 }
