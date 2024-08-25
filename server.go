@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rainbowmga/timetravel/api"
 	"github.com/rainbowmga/timetravel/logging"
+	"github.com/rainbowmga/timetravel/middleware"
 	"github.com/rainbowmga/timetravel/model"
 	"github.com/rainbowmga/timetravel/service"
 	"github.com/rs/zerolog/log"
@@ -37,9 +38,11 @@ func main() {
 	})
 	api.CreateRoutes(apiRoute)
 
+	loggedRouter := middleware.AccessLogMiddleware(router)
+
 	address := "127.0.0.1:8000"
 	srv := &http.Server{
-		Handler:      router,
+		Handler:      loggedRouter,
 		Addr:         address,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
