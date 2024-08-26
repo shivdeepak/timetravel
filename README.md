@@ -246,6 +246,52 @@ records if it exists in the database.
 
 # Further Improvements
 
+### Record Versions and Audit Trail
+
+My current implementation of versioned record updates is quite rudimentary.
+
+I can think of making following enhancements based on requirements and needs:
+
+1. We can store the exact changes during each update to the records table. This
+   will be useful if we need to build a user interface that shows an audit
+   trail of all changes that were made to a given record.
+
+2. On top of `when` and `what` values have changed, it is also important to
+   capture `who` changed the record. It could be easily implemented by capturing
+   the current session user_id (when an authenticated session is available /
+   implemented).
+
+4. In the current project, there is only one resource, and we call it `record`.
+   In a production level application, there are several different resources,
+   and it is beneficial to create a generic system that creates and stores
+   the audit trail of all the changes in the system.
+
+3. It may be desirable to store the Audit Trail in a seperate table or even
+   database for compliance reasons.
+
+Taking all the above points into consideration, a more sophisticated audit trail
+record/entry might look like this:
+
+```javascript
+{
+	version_id: "12e72bb0-8ce6-4017-81d1-0dbf1c0711e5",
+	entity_type: "rainbow_records", # resource name, `record` in current project
+	entity_id: 30,
+	actor_type: "rainbow_user", # could be admin, customer, or user of the customer
+	actor_id: 3092,
+    changes: [
+		{type: "update", field: "first_name", before: "Steve", after: "Steven"}
+		{type: "delete", field: "dob", before: "1955-02-24T00:00:00-07:00", after: null},
+		{type: "create", field: "middle_name", before: null, after: "Paul"},
+	],
+	created_at: "2024-08-25T13:44:29-07:00"
+}
+```
+
+Note that the exact data format has to also consider how other systems are going
+to consume the data.
+
+
 ### API Spec & API Docs
 
 If this API is used by many users (such as other internal or external engineers
