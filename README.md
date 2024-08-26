@@ -275,9 +275,9 @@ record/entry might look like this:
 ```javascript
 {
 	version_id: "12e72bb0-8ce6-4017-81d1-0dbf1c0711e5",
-	entity_type: "rainbow_records", # resource name, `record` in current project
+	entity_type: "rainbow_records", // resource name, `record` in current project
 	entity_id: 30,
-	actor_type: "rainbow_user", # could be admin, customer, or user of the customer
+	actor_type: "rainbow_user", // could be admin, customer, or user of the customer
 	actor_id: 3092,
     changes: [
 		{type: "update", field: "first_name", before: "Steve", after: "Steven"}
