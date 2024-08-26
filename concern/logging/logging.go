@@ -14,6 +14,6 @@ func InitLogging() {
 
 func LogError(err error) {
 	if err != nil {
-		log.Error().Err(nil).Msg("")
+		log.Error().Err(err).Msg("Raised")
 	}
 }
