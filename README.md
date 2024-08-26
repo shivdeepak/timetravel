@@ -243,3 +243,72 @@ records if it exists in the database.
 < Content-Type: application/json; charset=utf-8
 {"error":"record of id 32 does not exist"}
 ```
+
+# Further Improvements
+
+### API Spec & API Docs
+
+If this API is used by many users (such as other internal or external engineers
+or data scientists), we can consider defining a standard API with documentation
+and providing SDKs in popular programming languages.
+
+I would use [Open API](https://spec.openapis.org/oas/latest.html) spec to build
+API Documentation. It can also be used to auto-generate clients (SDKs) in
+various programming languages. Open API leverages API specification defined in
+a standardized `.json` file that is used for documentation, and SDK generation.
+
+I would also consider using
+[json:api](https://spec.openapis.org/oas/latest.html) spec to define the
+requests' payload and responses for /api/v2. JSON:API is defined to allow an API
+spec to evolve with more capabilities while being backward compatible. This will
+allow us to stay with a single version for a very long time, reducing
+irrevesible technical debt. Also, the attribute names use a convention that
+developers can remember.
+
+We currently don't use JSON API in /api/v2, but that could be implemented if
+desired before releasing the API.
+
+### Make it a Twelve-Factor App - [https://12factor.net/](https://12factor.net/)
+
+It is desirable to build a 12-factor app for production which has numerous
+benefits from developer experience, maintainability, to application security.
+
+What can be improved:
+
+1. Config: We can improve how we handle config. For instance, right now I have
+   hardcoded db file location. In cloud based deployments with possibly multiple
+   webservers hosting the API, it is desirable to use server based relational
+   database, for example: MySQL, Postgres etc. In such cases, the database
+   credentials are considered confidential and there could be other secrets and
+   environment-specific configurations. Adding them through environment
+   variables is more desirable. We can use
+   [`godotenv`](https://github.com/joho/godotenv) library to manage environment
+   variables by leveraging `.env*` files in local development and
+   possibly even in production, depending on the deployment setup.
+2. Build, release, run: For a production-grade application with CI/CD, we
+   can think about separate build, release, and run stages. However, given the
+   project's limited scope, this is not applicable.
+3. Processes, Concurrency, Disposability: Ideally, a web server process should
+   be stateless, but in our case, it's not because we are using SQLite which is
+   a file based database.
+
+   This can be fixed by using an server based database system such as Postgres
+   or MySQL. When we do that, web server processes will become stateless and
+   can be run in parallel without degrading the rate of cache hits, and we can
+   achieve concurrency if desired.
+
+   A stateless server is disposable.
+4. Logs, Admin processes: We don't have any of this setup due to the project's
+   limited scope. If we are to run this as a production-grade service, then
+   thinking about Logging and Admin Processes is ideal.
+
+### Tests
+
+1. Given the limited time and scope of the project, I have not written any unit
+   or integration tests. If this service were to run in production, we will
+   atleast require API level integration testing. This will help us avoid
+   regression issues in production.
+2. API level integration testing is great to get started. But for better
+   developer experience and productivity, I will also write individual module
+   level unit tests so that developers can make significant changes confidently,
+   and release feature quickly.
