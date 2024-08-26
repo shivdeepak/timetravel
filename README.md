@@ -279,7 +279,7 @@ record/entry might look like this:
 	entity_id: 30,
 	actor_type: "rainbow_user", // could be admin, customer, or user of the customer
 	actor_id: 3092,
-    changes: [
+        changes: [
 		{type: "update", field: "first_name", before: "Steve", after: "Steven"}
 		{type: "delete", field: "dob", before: "1955-02-24T00:00:00-07:00", after: null},
 		{type: "create", field: "middle_name", before: null, after: "Paul"},
