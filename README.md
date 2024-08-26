@@ -291,6 +291,17 @@ record/entry might look like this:
 Note that the exact data format has to also consider how other systems are going
 to consume the data.
 
+### Safer Database Schema Migrations
+
+Here I am using [GORM's](https://gorm.io/) in-built
+[auto migrate](https://gorm.io/docs/migration.html) functionality. Which doesn't
+necessarily do the right thing during complex migration. I would worry that it
+might even lead to data loss.
+
+I would use a better migration mechanism, for example:
+[gormigrate](https://github.com/go-gormigrate/gormigrate) that give you more
+fine-grained control and visibility over the schema migrations will be running 
+on the production database server.
 
 ### API Spec & API Docs
 
